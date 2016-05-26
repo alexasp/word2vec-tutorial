@@ -131,7 +131,7 @@ skip_window = 1  # How many words to consider left and right.
 num_skips = 2  # How many times to reuse an input to generate a label.
 
 # We pick a random validation set to sample nearest neighbors. Here we limit the
-# validation samples to the words that have a low numeric ID, which by
+# validation samples to the words t hat have a low numeric ID, which by
 # construction are also the most frequent.
 valid_size = 16  # Random set of words to evaluate similarity on.
 valid_window = 100  # Only pick dev samples in the head of the distribution.
@@ -181,7 +181,7 @@ with graph.as_default():
     init = tf.initialize_all_variables()
 
 # Step 5: Begin training.
-num_steps = 100000
+num_steps = 1000
 
 with tf.Session(graph=graph) as session:
     # We must initialize all variables before we use them.
@@ -220,6 +220,34 @@ with tf.Session(graph=graph) as session:
                 print(log_str)
 
     final_embeddings = normalized_embeddings.eval()
+
+def plot_with_labels(low_dim_embs, labels, filename='tsne.png'):
+  assert low_dim_embs.shape[0] >= len(labels), "More labels than embeddings"
+  plt.figure(figsize=(18, 18))  #in inches
+  for i, label in enumerate(labels):
+    x, y = low_dim_embs[i,:]
+    plt.scatter(x, y)
+    plt.annotate(label,
+                 xy=(x, y),
+                 xytext=(5, 2),
+                 textcoords='offset points',
+                 ha='right',
+                 va='bottom')
+
+  plt.savefig(filename)
+
+try:
+  from sklearn.manifold import TSNE
+  import matplotlib.pyplot as plt
+
+  tsne = TSNE(perplexity=30, n_components=2, init='pca', n_iter=5000)
+  plot_only = 500
+  low_dim_embs = tsne.fit_transform(final_embeddings[:plot_only,:])
+  labels = [reverse_dictionary[i] for i in xrange(plot_only)]
+  plot_with_labels(low_dim_embs, labels)
+
+except ImportError:
+  print("Please install sklearn and matplotlib to visualize embeddings.")
 
 # Extended code by Alexander Asplund
 
