@@ -181,7 +181,7 @@ with graph.as_default():
     init = tf.initialize_all_variables()
 
 # Step 5: Begin training.
-num_steps = 1000
+num_steps = 100001
 
 with tf.Session(graph=graph) as session:
     # We must initialize all variables before we use them.
@@ -221,7 +221,7 @@ with tf.Session(graph=graph) as session:
 
     final_embeddings = normalized_embeddings.eval()
 
-def plot_with_labels(low_dim_embs, labels, filename='tsne.png'):
+def plot_with_labels(low_dim_embs, labels, filename='tsne.svg'):
   assert low_dim_embs.shape[0] >= len(labels), "More labels than embeddings"
   plt.figure(figsize=(18, 18))  #in inches
   for i, label in enumerate(labels):
@@ -249,6 +249,7 @@ try:
 except ImportError:
   print("Please install sklearn and matplotlib to visualize embeddings.")
 
+
 # Extended code by Alexander Asplund
 
 from nltk.corpus import stopwords
@@ -258,9 +259,9 @@ import itertools
 def top_n_similiar(word, embeddings, word_index_map, index_word_map, top_limit):
     target_word_index = word_index_map[word]
     word_embedding = embeddings[target_word_index, :]
-    word_embedding = np.transpose(word_embedding)
 
-    similarities = np.dot(embeddings, word_embedding)  # cosine similarity
+    word_embedding = np.transpose(word_embedding)
+    similarities = np.dot(embeddings, word_embedding)  # cosine similarity, since vectors are normalized already
     similarities[target_word_index] = 0  # don't match the target word
     similarities[word_index_map['UNK']] = 0
 
@@ -295,11 +296,12 @@ stop_word_list = stopwords.words('english')
 stop_word_list.extend(["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"])
 non_stop_word_generator = filter_tuples_by_stopwords(descending_counts, stop_word_list)
 
-top_n_no_stopwords = list(itertools.islice(non_stop_word_generator, 0, 10))
+top_n_no_stopwords = list(itertools.islice(non_stop_word_generator, 0, top_limit))
+
 
 print("\n\nConsidering all words, including any stop words.\n")
 output_top_n_similar(top_n_words)
 
-print("\n\nConsidering only words that are not stop words or numbers.\n")
+print("\n\nConsidering only words that are not stop words or common numerals.\n")
 output_top_n_similar(top_n_no_stopwords)
 
